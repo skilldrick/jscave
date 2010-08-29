@@ -51,31 +51,52 @@ JsCave.Game = (function () {
 JsCave.Walls = (function () {
     var that = {},
         tunnelHeight = 50,
-        offset = 0,
-        offArray = [30, 31, 32, 33, 34, 35, 34, 33, 32, 31],
+        offset = 30,
+        offArray = [];
         counter = 0,
         blockSize = 5;
 
+    function fillArray() {
+        offArray.shift();
+        while(offArray.length * blockSize < JsCave.width) {
+            offArray.push(nextOffset());
+        }
+        print offArray.length;
+    }
+
     function nextOffset() {
-        minOffset = 0;
-        maxOffset = JsCave.height - tunnelHeight;
-        alert(Math.floor(Math.random() * 2));
+        var minOffset = 0;
+        var maxOffset = JsCave.height - tunnelHeight;
+        var goUp = Math.floor(Math.random() * 2);
+        if(goUp) {
+            offset -= 1;
+            if(offset < minOffset) {
+                offset += 1;
+            }
+        }
+        else {
+            offset += 1;
+            if(offset > maxOffset) {
+                offset -= 1;
+            }
+        }
+        return offset;
     }
 
     that.draw = function () {
         var width = JsCave.width;
         var height = JsCave.height;
+        fillArray();
         for(var i = 0; i < offArray.length; i+=1) {
             var topEdge = 0;
             var topHeight = offArray[i];
-            var bottomEdge = offArray[i] + tunnelHeight;
+            var bottomEdge = topHeight + tunnelHeight;
             var bottomHeight = height - bottomEdge;
             JsCave.ctx.fillRect(i * blockSize, topEdge,
                                 blockSize, topHeight);
             JsCave.ctx.fillRect(i * blockSize, bottomEdge,
                                 blockSize, bottomHeight);
         }
-        nextOffset();
     }
 
     return that;
