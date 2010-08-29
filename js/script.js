@@ -55,7 +55,12 @@ JsCave.Walls = (function () {
         offArray = [30, 31, 32, 33, 34, 35, 34, 33, 32, 31],
         counter = 0,
         blockSize = 5;
-    
+
+    function nextOffset() {
+        minOffset = 0;
+        maxOffset = JsCave.height - tunnelHeight;
+        alert(Math.floor(Math.random() * 2));
+    }
 
     that.draw = function () {
         var width = JsCave.width;
@@ -70,6 +75,7 @@ JsCave.Walls = (function () {
             JsCave.ctx.fillRect(i * blockSize, bottomEdge,
                                 blockSize, bottomHeight);
         }
+        nextOffset();
     }
 
     return that;
