@@ -18,8 +18,8 @@ JsCave.Game = (function () {
 
     that.start = function () {
         canvas = $('#game-board')[0];
-        width = canvas.width;
-        height = canvas.height;
+        width = JsCave.width = canvas.width;
+        height = JsCave.height = canvas.height;
         
         if(canvas.getContext) {
             ctx = canvas.getContext('2d');
@@ -49,17 +49,26 @@ JsCave.Game = (function () {
 
 
 JsCave.Walls = (function () {
-    var that = {};
-    var width = 100;
-    var offset = 0;
-    var offArray = [50, 51, 52, 53, 54, 55, 54, 53, 52, 51];
-    var counter = 0;
-    var blockSize = 5;
+    var that = {},
+        tunnelHeight = 50,
+        offset = 0,
+        offArray = [30, 31, 32, 33, 34, 35, 34, 33, 32, 31],
+        counter = 0,
+        blockSize = 5;
     
 
     that.draw = function () {
+        var width = JsCave.width;
+        var height = JsCave.height;
         for(var i = 0; i < offArray.length; i+=1) {
-            JsCave.ctx.fillRect(i * blockSize, 0, blockSize, offArray[i]);
+            var topEdge = 0;
+            var topHeight = offArray[i];
+            var bottomEdge = offArray[i] + tunnelHeight;
+            var bottomHeight = height - bottomEdge;
+            JsCave.ctx.fillRect(i * blockSize, topEdge,
+                                blockSize, topHeight);
+            JsCave.ctx.fillRect(i * blockSize, bottomEdge,
+                                blockSize, bottomHeight);
         }
     }
 
