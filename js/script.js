@@ -117,8 +117,6 @@ JsCave.Walls = (function () {
         blockSize = 5,
         lastGoUp = 0;
 
-
-
     function fillArray() {
         offArray.shift();
         while(offArray.length * blockSize < JsCave.width) {
@@ -142,6 +140,7 @@ JsCave.Walls = (function () {
             goUp = goUp && getZeroOrOne();
         }
         lastGoUp = goUp;
+
         if(goUp) {
             offset -= 1;
             if(offset < minOffset) {
