@@ -13,8 +13,16 @@ JsCave.Game = (function () {
         //alert('Game Over!!!');
     }
 
-    function draw_border() {
+    function drawBorder() {
         ctx.strokeRect(1, 1, width - 2, width -2);
+    }
+
+    function drawBackground() {
+        var progression = JsCave.Walls.progression();
+        that.ctx.save();
+        that.ctx.fillStyle = "hsl(" + (100 - (progression * 100)) + ", 70%, 50%)";
+        that.ctx.fillRect(0, 0, width, height);
+        that.ctx.restore();
     }
 
     function checkCollision() {
@@ -26,13 +34,12 @@ JsCave.Game = (function () {
             count = 0;
         }
         count = +count;
-        var ctx = JsCave.ctx;
         var snakeCentre = JsCave.Snake.centre();
-        ctx.beginPath();
-        ctx.strokeStyle = "Red";
-        ctx.arc(snakeCentre[0], snakeCentre[1], count * 4 + 5, 0, Math.PI * 2, true);
-        ctx.stroke();
-        if(count < 3) {
+        that.ctx.beginPath();
+        that.ctx.strokeStyle = "Red";
+        that.ctx.arc(snakeCentre[0], snakeCentre[1], count * 4 + 4, 0, Math.PI * 2, true);
+        that.ctx.stroke();
+        if(count < 5) {
             setTimeout(drawCollision, 100, [count + 1]);
         }
     }
@@ -74,9 +81,10 @@ JsCave.Game = (function () {
 
     that.draw = function () {
         that.ctx.clearRect(0, 0, width, height);
+        drawBackground();
         JsCave.Walls.draw();
         JsCave.Snake.draw();
-        draw_border();
+        drawBorder();
         that.ctx.beginPath();
         that.ctx.arc(100, 100, 20, 0, Math.Pi * 2, true);
         that.ctx.fill();
@@ -204,6 +212,7 @@ JsCave.Walls = (function () {
     }
 
     var that = {},
+        startingHeight,
         tunnelHeight, //set in init()
         offset,
         offArray = [];
@@ -213,7 +222,7 @@ JsCave.Walls = (function () {
         narrowing = 0.2;
 
     that.init = function () {
-        tunnelHeight = JsCave.height * 3 / 4;
+        startingHeight = tunnelHeight = JsCave.height * 3 / 4;
         offset = (JsCave.height - tunnelHeight) / 2;
     }
 
@@ -222,6 +231,8 @@ JsCave.Walls = (function () {
         var height = JsCave.height;
         fillArray();
         tunnelHeight -= narrowing;
+        JsCave.ctx.save();
+        JsCave.ctx.fillStyle = "rgb(70, 60, 40)";
         for(var i = 0; i < offArray.length; i+=1) {
             var topEdge = 0;
             var topHeight = offArray[i][0];
@@ -232,11 +243,16 @@ JsCave.Walls = (function () {
             JsCave.ctx.fillRect(i * blockSize, bottomEdge,
                                 blockSize, bottomHeight);
         }
+        JsCave.ctx.restore();
     }
 
     that.offsetAt = function (position) {
         var index = Math.floor(position / blockSize);
         return offArray[index - 1];
+    }
+
+    that.progression = function () {
+        return (startingHeight - tunnelHeight) / startingHeight;
     }
 
     return that;
