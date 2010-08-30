@@ -13,6 +13,10 @@ JsCave.Game = (function () {
         alert('Game Over!!!');
     }
 
+    function draw_border() {
+        ctx.strokeRect(1, 1, width - 2, width -2);
+    }
+
     var that = {},
         canvas,
         ctx,
@@ -23,6 +27,8 @@ JsCave.Game = (function () {
         canvas = $('#game-board')[0];
         width = JsCave.width = canvas.width;
         height = JsCave.height = canvas.height;
+        JsCave.Snake.init();
+        JsCave.Walls.init();
         
         if(canvas.getContext) {
             ctx = canvas.getContext('2d');
@@ -50,17 +56,14 @@ JsCave.Game = (function () {
         draw_border();
     }
 
-    function draw_border() {
-        ctx.strokeRect(1, 1, width - 2, width -2);
-    }
-
     return that;
 }());
 
 
 JsCave.Snake = (function () {
     var that = {};
-    var height = 60;
+    var vpos; //set it init()
+    var xpos = 20;
     var dy = 1;
     var ddy = 1;
     var pressed = false;
@@ -84,24 +87,28 @@ JsCave.Snake = (function () {
         else {
             dy += ddy;
         }
-    } 
+    }
+
+    that.init = function () {
+        vpos = JsCave.height / 3;
+    }
  
     that.draw = function () {
         calculateDirection();
         if(pressed) {
-            height += dy;
+            vpos += dy;
         }
         else {
-            height += dy;
+            vpos += dy;
         }
-        JsCave.ctx.fillRect(10, height, 5, 5);
+        JsCave.ctx.fillRect(xpos, vpos, 5, 5);
         if(that.collision()) {
            JsCave.gameOver = true;
         }
     }
 
     that.collision = function () {
-        return height < 0 || height > JsCave.height
+        return vpos < 0 || vpos > JsCave.height;
     }
 
     return that;
@@ -109,25 +116,18 @@ JsCave.Snake = (function () {
 
 
 JsCave.Walls = (function () {
-    var that = {},
-        tunnelHeight = 50,
-        offset = 30,
-        offArray = [];
-        counter = 0,
-        blockSize = 5,
-        lastGoUp = 0;
-
     function fillArray() {
         offArray.shift();
         while(offArray.length * blockSize < JsCave.width) {
-            offArray.push(nextOffset());
+            var topOffset = nextOffset();
+            var bottomOffset = Math.floor(topOffset + tunnelHeight);
+            offArray.push([topOffset, bottomOffset]);
         }
     }
 
     function getZeroOrOne() {
         return Math.floor(Math.random() * 2);
     }
-        
 
     function nextOffset() {
         var minOffset = 0;
@@ -156,14 +156,28 @@ JsCave.Walls = (function () {
         return offset;
     }
 
+    var that = {},
+        tunnelHeight, //set in init()
+        offset,
+        offArray = [];
+        counter = 0,
+        blockSize = 5,
+        lastGoUp = 0;
+
+    that.init = function () {
+        tunnelHeight = JsCave.height * 3 / 4;
+        offset = (JsCave.height - tunnelHeight) / 2;
+    }
+
     that.draw = function () {
         var width = JsCave.width;
         var height = JsCave.height;
         fillArray();
+        tunnelHeight -= 0.5;
         for(var i = 0; i < offArray.length; i+=1) {
             var topEdge = 0;
-            var topHeight = offArray[i];
-            var bottomEdge = topHeight + tunnelHeight;
+            var topHeight = offArray[i][0];
+            var bottomEdge = offArray[i][1];
             var bottomHeight = height - bottomEdge;
             JsCave.ctx.fillRect(i * blockSize, topEdge,
                                 blockSize, topHeight);
@@ -175,10 +189,3 @@ JsCave.Walls = (function () {
     return that;
 
 }());
-        
-
-function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.strokeRect(i, i, canvas.width - 2, canvas.height - 2); //game border
-    i++;
-}
