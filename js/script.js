@@ -34,6 +34,10 @@ JsCave.Game = (function () {
         that.ctx.restore();
     }
 
+    function drawScore() {
+        $('#score p').html(score);
+    }
+
     function checkCollision() {
         return JsCave.Collision.detect();
     }
@@ -57,7 +61,10 @@ JsCave.Game = (function () {
         canvas,
         ctx,
         width,
-        height;
+        height,
+        score = 0,
+        scoreIncrement = 5;
+    
 
     that.start = function () {
         canvas = $('#game-board')[0];
@@ -75,6 +82,7 @@ JsCave.Game = (function () {
     }
 
     that.gameLoop = function () {
+        score += scoreIncrement;
         that.draw();
         if(checkCollision()) {
             drawCollision();
@@ -94,6 +102,7 @@ JsCave.Game = (function () {
         JsCave.Walls.draw();
         JsCave.Snake.draw();
         drawBorder();
+        drawScore();
     }
 
     return that;
@@ -106,8 +115,18 @@ JsCave.Collision = (function () {
     that.detect = function () {
         var snakePos = JsCave.Snake.position();
         var wallsPos = JsCave.Walls.offsetAt(snakePos.frontEdge);
-        return snakePos.topEdge < wallsPos[0] ||
+        var wallHit = snakePos.topEdge < wallsPos[0] ||
             snakePos.bottomEdge > wallsPos[1];
+        var barrierHit = false;
+        if(wallsPos[2] !== false) {
+            console.debug(snakePos.topEdge < (wallsPos[2] + JsCave.Barriers.height));
+            console.debug(snakePos.bottomEdge > wallsPos[2]);
+            barrierHit = snakePos.topEdge < (wallsPos[2] + JsCave.Barriers.height) &&
+                snakePos.bottomEdge > wallsPos[2];
+            //console.debug(barrierHit);
+            console.debug('****');
+        }
+        return wallHit || barrierHit;
     }
 
     return that;
@@ -123,9 +142,18 @@ JsCave.Snake = (function () {
         }
     }
 
+    function fillHistory(vpos) {
+        while(history.length <= historyMax) {
+            history.push(vpos);
+        }
+        history.shift();
+    }
+
     var that = {};
-    var vpos; //set it init()
-    var hpos = 20;
+    var vpos;
+    var history = [];
+    var historyMax = 4;
+    var hpos;
     var size = 5;
     var dy = 1;
     var ddy = 1;
@@ -145,6 +173,7 @@ JsCave.Snake = (function () {
 
     that.init = function () {
         vpos = JsCave.height / 3;
+        hpos = size * historyMax;
     }
  
     that.draw = function () {
@@ -155,7 +184,10 @@ JsCave.Snake = (function () {
         else {
             vpos += dy;
         }
-        JsCave.ctx.fillRect(hpos, vpos, size, size);
+        fillHistory(vpos);
+        for(var i = 0; i < history.length; i+=1) {
+            JsCave.ctx.fillRect(i * size, history[i], size, size);
+        }
     }
 
     that.position = function () {
@@ -176,13 +208,54 @@ JsCave.Snake = (function () {
 }());
 
 
+JsCave.Barriers = (function () {
+    function calculate(topMax, bottomMax) {
+        while(true) {
+            if(goes > 60) {
+                return false;
+            }
+            var number = Math.floor(Math.random() * JsCave.height);
+            if((number + height) > topMax && number < bottomMax) {
+                goes = 0;
+                return number;
+            }
+            goes += 1;
+        }
+    }
+    
+    var that = {};
+    var distance = 10;
+    var count = 0;
+    var width = 5;
+    var height = 20;
+    var goes = 0;
+    that.height = height;
+
+    that.getNew = function (topMax, bottomMax) {
+        if(count >= distance) {
+            count = 0;
+            return calculate(topMax, bottomMax);
+        }
+        count += 1;
+        return false;
+    }
+
+    that.draw = function (left, top) {
+        JsCave.ctx.fillRect(left, top, width, height);
+    }
+
+    return that;
+}());
+
+
 JsCave.Walls = (function () {
     function fillArray() {
         offArray.shift();
         while(offArray.length * blockSize < JsCave.width) {
             var topOffset = nextOffset();
             var bottomOffset = Math.floor(topOffset + tunnelHeight);
-            offArray.push([topOffset, bottomOffset]);
+            var barrierTop = JsCave.Barriers.getNew(topOffset, bottomOffset);
+            offArray.push([topOffset, bottomOffset, barrierTop]);
         }
     }
 
@@ -244,10 +317,14 @@ JsCave.Walls = (function () {
             var topHeight = offArray[i][0];
             var bottomEdge = offArray[i][1];
             var bottomHeight = height - bottomEdge;
+            var barrierTop = offArray[i][2];
             JsCave.ctx.fillRect(i * blockSize, topEdge,
                                 blockSize, topHeight);
             JsCave.ctx.fillRect(i * blockSize, bottomEdge,
                                 blockSize, bottomHeight);
+            if(barrierTop !== false) {
+                JsCave.Barriers.draw(i * blockSize, barrierTop);
+            }
         }
         JsCave.ctx.restore();
     }
