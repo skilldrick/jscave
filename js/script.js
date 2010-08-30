@@ -2,6 +2,14 @@
 Skilldrick: skilldrick [at] gmail.com
 */
 
+function hsl(hue, saturation, luminance) {
+    return "hsl(" + hue + ", " + saturation + "%, " + luminance + "%)";
+}
+
+function rgb(r, g, b) {
+    return "rgb(" + r + ", " + g + ", " + b + ")";
+}
+
 $(document).ready(function () {
     JsCave.Game.start();
 });
@@ -19,8 +27,9 @@ JsCave.Game = (function () {
 
     function drawBackground() {
         var progression = JsCave.Walls.progression();
+        var hue = Math.floor(100 - (progression * 100));
         that.ctx.save();
-        that.ctx.fillStyle = "hsl(" + (100 - (progression * 100)) + ", 70%, 50%)";
+        that.ctx.fillStyle = hsl(hue, 70, 50);
         that.ctx.fillRect(0, 0, width, height);
         that.ctx.restore();
     }
@@ -85,9 +94,6 @@ JsCave.Game = (function () {
         JsCave.Walls.draw();
         JsCave.Snake.draw();
         drawBorder();
-        that.ctx.beginPath();
-        that.ctx.arc(100, 100, 20, 0, Math.Pi * 2, true);
-        that.ctx.fill();
     }
 
     return that;
@@ -232,7 +238,7 @@ JsCave.Walls = (function () {
         fillArray();
         tunnelHeight -= narrowing;
         JsCave.ctx.save();
-        JsCave.ctx.fillStyle = "rgb(70, 60, 40)";
+        JsCave.ctx.fillStyle = rgb(70, 60, 40);
         for(var i = 0; i < offArray.length; i+=1) {
             var topEdge = 0;
             var topHeight = offArray[i][0];
