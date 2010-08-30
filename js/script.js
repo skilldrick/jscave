@@ -119,12 +119,8 @@ JsCave.Collision = (function () {
             snakePos.bottomEdge > wallsPos[1];
         var barrierHit = false;
         if(wallsPos[2] !== false) {
-            console.debug(snakePos.topEdge < (wallsPos[2] + JsCave.Barriers.height));
-            console.debug(snakePos.bottomEdge > wallsPos[2]);
             barrierHit = snakePos.topEdge < (wallsPos[2] + JsCave.Barriers.height) &&
                 snakePos.bottomEdge > wallsPos[2];
-            //console.debug(barrierHit);
-            console.debug('****');
         }
         return wallHit || barrierHit;
     }
