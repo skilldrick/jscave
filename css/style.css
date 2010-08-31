@@ -198,9 +198,19 @@ button {  width: auto; overflow: visible; }
 
 
  /* Primary Styles
-    Author: 
+ Author: Skilldrick: skilldrick [at] gmail.com
  */
 
+#main {
+    width: 128px;
+    margin: auto;
+    margin-top: 64px;
+}
+
+#score p {
+    text-align: center;
+    font-size: 2em;
+}
 
 
 

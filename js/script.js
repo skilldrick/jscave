@@ -10,6 +10,10 @@ function rgb(r, g, b) {
     return "rgb(" + r + ", " + g + ", " + b + ")";
 }
 
+function rgba(r, g, b, a) {
+    return "rgba(" + r + ", " + g + ", " + b + ", " + a + ")";
+}
+
 $(document).ready(function () {
     JsCave.Game.start();
 });
@@ -18,7 +22,48 @@ var JsCave = JsCave || {};
 
 JsCave.Game = (function () {
     function gameOver() {
-        //alert('Game Over!!!');
+        that.ctx.save();
+        that.ctx.fillStyle = rgba(255, 255, 255, 0.5);
+        that.ctx.fillRect(0, 0, width, height);
+        that.ctx.restore();
+        JsCave.Text.renderString('game over', 15, 5, 2);
+        JsCave.Text.renderString('press r', 17, 5, 4);
+        JsCave.Text.renderString('to retry', 16, 5, 5);
+    }
+
+    function clearScreen() {
+        that.ctx.clearRect(0, 0, width, height);
+    }
+
+    function welcomeScreen() {
+        JsCave.Text.renderString('jscave', 20, 5, 2);
+        JsCave.Text.renderString('press space', 11, 5, 4);
+        JsCave.Text.renderString('to begin', 16, 5, 5);
+        $(document).keydown(function (event) {
+            if(event.keyCode == 32) {
+                $(document).unbind(event);
+                gameLoop();
+            }
+        });
+        $(document).keydown(function (event) {
+            if(event.keyCode == 82) {
+                location.reload();
+            }
+        });
+    }
+
+    function gameLoop() {
+        score += scoreIncrement;
+        that.draw();
+        if(checkCollision()) {
+            drawCollision(0, gameOver);
+        }
+        else if(JsCave.gameOver) {
+            gameOver();
+        }
+        else {
+            setTimeout(gameLoop, 100);
+        }
     }
 
     function drawBorder() {
@@ -42,7 +87,7 @@ JsCave.Game = (function () {
         return JsCave.Collision.detect();
     }
 
-    function drawCollision(count) {
+    function drawCollision(count, callback) {
         if(count === undefined) {
             count = 0;
         }
@@ -53,7 +98,12 @@ JsCave.Game = (function () {
         that.ctx.arc(snakeCentre[0], snakeCentre[1], count * 4 + 4, 0, Math.PI * 2, true);
         that.ctx.stroke();
         if(count < 5) {
-            setTimeout(drawCollision, 100, [count + 1]);
+            setTimeout(drawCollision, 100, count + 1, callback);
+        }
+        else {
+            if(callback !== undefined) {
+                callback();
+            }
         }
     }
 
@@ -77,32 +127,12 @@ JsCave.Game = (function () {
             ctx = canvas.getContext('2d');
             i = 1;
             JsCave.ctx = that.ctx = ctx;
-            that.welcomeScreen();
-        }
-    }
-
-    that.welcomeScreen = function () {
-        JsCave.Text.renderString('press space', 3, 5, 1);
-        JsCave.Text.renderString('to begin', 8, 5, 2);
-    }
-
-    that.gameLoop = function () {
-        score += scoreIncrement;
-        that.draw();
-        if(checkCollision()) {
-            drawCollision();
-            gameOver();
-        }
-        else if(JsCave.gameOver) {
-            gameOver();
-        }
-        else {
-            setTimeout(that.gameLoop, 100);
+            welcomeScreen();
         }
     }
 
     that.draw = function () {
-        that.ctx.clearRect(0, 0, width, height);
+        clearScreen();
         drawBackground();
         JsCave.Walls.draw();
         JsCave.Snake.draw();
