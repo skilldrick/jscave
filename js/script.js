@@ -260,11 +260,16 @@ JsCave.Barriers = (function () {
     var width = 5;
     var height = 20;
     var goes = 0;
+    var gracePeriod = 2; //this many barriers are skipped at beginning
     that.height = height;
 
     that.getNew = function (topMax, bottomMax) {
         if(count >= distance) {
             count = 0;
+            if(gracePeriod > 0) {
+                gracePeriod -= 1;
+                return false;
+            }
             return calculate(topMax, bottomMax);
         }
         count += 1;
