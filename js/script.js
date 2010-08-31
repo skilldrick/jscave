@@ -67,7 +67,7 @@ JsCave.Game = (function () {
     }
 
     function drawBorder() {
-        ctx.strokeRect(1, 1, width - 2, width -2);
+        ctx.strokeRect(0.5, 0.5, width - 1, width - 1);
     }
 
     function drawBackground() {
