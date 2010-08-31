@@ -77,8 +77,13 @@ JsCave.Game = (function () {
             ctx = canvas.getContext('2d');
             i = 1;
             JsCave.ctx = that.ctx = ctx;
-            that.gameLoop();
+            that.welcomeScreen();
         }
+    }
+
+    that.welcomeScreen = function () {
+        JsCave.Text.renderString('press space', 3, 5, 1);
+        JsCave.Text.renderString('to begin', 8, 5, 2);
     }
 
     that.gameLoop = function () {
@@ -336,4 +341,47 @@ JsCave.Walls = (function () {
 
     return that;
 
+}());
+
+JsCave.Text = (function () {
+    function loadFont() {
+        if(font === undefined) {
+            $.ajax({async: false,
+                    dataType: 'json',
+                    url: 'js/font.json',
+                    success: function(data) {
+                        font = data;
+                    }
+                   });
+        }
+    }
+            
+    function drawSquare(xOffset, yOffset) {
+        JsCave.ctx.fillRect(xOffset * blockSize, yOffset * blockSize, blockSize, blockSize);
+    }
+
+    function drawLetter(letter, xOffset, yOffset) {
+        for(var row = 0; row < letter.length; row+=1) {
+            for(var col = 0; col < letter[row].length; col += 1) {
+                if(letter[row][col]) {
+                    drawSquare(col + xOffset, row + yOffset);
+                }
+            }
+        }
+    }
+
+    var that = {};
+    var blockSize = 2;
+    var font;
+    
+    that.renderString = function (str, x, y, lineNumber) {
+        loadFont();
+        str = str.toUpperCase();
+        for(var i = 0; i < str.length; i+=1) {
+            var letter = font[str[i]];
+            drawLetter(letter, i * 4 + x, lineNumber * 7 + y);
+        }
+    }
+    
+    return that;
 }());
