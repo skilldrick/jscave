@@ -207,7 +207,7 @@ button {  width: auto; overflow: visible; }
     margin-top: 64px;
 }
 
-#score p {
+#htmlscore p {
     text-align: center;
     font-size: 2em;
 }

@@ -80,7 +80,7 @@ JsCave.Game = (function () {
     }
 
     function drawScore() {
-        $('#score p').html(score);
+        $('#htmlscore p').html(score);
     }
 
     function checkCollision() {
@@ -108,8 +108,8 @@ JsCave.Game = (function () {
     }
 
     var that = {},
-        canvas,
         ctx,
+        scorectx,
         width,
         height,
         score = 0,
@@ -117,16 +117,19 @@ JsCave.Game = (function () {
     
 
     that.start = function () {
-        canvas = $('#game-board')[0];
+        var canvas = $('#game-board')[0];
         width = JsCave.width = canvas.width;
         height = JsCave.height = canvas.height;
+        var scoreCanvas = $('#score')[0];
         JsCave.Snake.init();
         JsCave.Walls.init();
         
         if(canvas.getContext) {
             ctx = canvas.getContext('2d');
+            scorectx = scoreCanvas.getContext('2d');
             i = 1;
             JsCave.ctx = that.ctx = ctx;
+            JsCave.scorectx = that.scorectx = scorectx;
             welcomeScreen();
         }
     }
