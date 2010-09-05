@@ -15,12 +15,30 @@ function rgba(r, g, b, a) {
 }
 
 $(document).ready(function () {
-    JsCave.Game.start();
+    JsCave.init();
 });
 
 var JsCave = JsCave || {};
 
-JsCave.Game = (function () {
+JsCave.init = function () {
+    JsCave.Game = JsCave.GameMaker();
+    JsCave.Collision = JsCave.CollisionMaker();
+    JsCave.Snake = JsCave.SnakeMaker();
+    JsCave.Barriers = JsCave.BarriersMaker();
+    JsCave.Walls = JsCave.WallsMaker();
+    JsCave.Text = JsCave.TextMaker();
+    JsCave.Game.start();
+}
+
+
+
+//JsCave.Init = function () {
+
+//}();
+
+
+
+JsCave.GameMaker = function () {
     function gameOver() {
         that.ctx.save();
         that.ctx.fillStyle = rgba(255, 255, 255, 0.5);
@@ -35,26 +53,42 @@ JsCave.Game = (function () {
         that.ctx.clearRect(0, 0, width, height);
     }
 
-    function welcomeScreen() {
-        JsCave.Text.renderString('jscave', 20, 5, 2);
-        JsCave.Text.renderString('press space', 11, 5, 4);
-        JsCave.Text.renderString('to begin', 16, 5, 5);
+    function setThrustListener() {
         $(document).keydown(function (event) {
-            if(event.keyCode == 32) {
-                $(document).unbind(event);
+            if(event.keyCode == 32) { //' '
+                $(this).unbind(event);
+                setRetryListener();
                 gameLoop();
-            }
-        });
-        $(document).keydown(function (event) {
-            if(event.keyCode == 82) {
-                location.reload();
             }
         });
     }
 
+    function setRetryListener() {
+        $(document).keydown(function (event) {
+            if(event.keyCode == 82) { //'r'
+                $(this).unbind(event);
+                JsCave.init();
+            }
+        });
+    }
+
+
+    function welcomeScreen() {
+        that.canvas.width = that.canvas.width;
+        clearScreen();
+        JsCave.Text.renderString('jscave', 20, 5, 2);
+        JsCave.Text.renderString('press space', 11, 5, 4);
+        JsCave.Text.renderString('to begin', 16, 5, 5);
+        setThrustListener();
+    }
+
+    var i = 0;
+
     function gameLoop() {
         score += scoreIncrement;
         that.draw();
+        console.log('frame' + i);
+        i++;
         if(checkCollision()) {
             drawCollision(0, gameOver);
         }
@@ -108,6 +142,7 @@ JsCave.Game = (function () {
     }
 
     var that = {},
+        canvas,
         ctx,
         scorectx,
         width,
@@ -118,6 +153,7 @@ JsCave.Game = (function () {
 
     that.start = function () {
         var canvas = $('#game-board')[0];
+        that.canvas = canvas;
         width = JsCave.width = canvas.width;
         height = JsCave.height = canvas.height;
         var scoreCanvas = $('#score')[0];
@@ -144,10 +180,10 @@ JsCave.Game = (function () {
     }
 
     return that;
-}());
+};
 
 
-JsCave.Collision = (function () {
+JsCave.CollisionMaker = function () {
     var that = {};
 
     that.detect = function () {
@@ -164,9 +200,10 @@ JsCave.Collision = (function () {
     }
 
     return that;
-}());
+};
 
-JsCave.Snake = (function () {
+
+JsCave.SnakeMaker = function () {
     function calculateDirection() {
         if(pressed) {
             dy -= ddy;
@@ -239,10 +276,10 @@ JsCave.Snake = (function () {
     }
 
     return that;
-}());
+};
 
 
-JsCave.Barriers = (function () {
+JsCave.BarriersMaker = function () {
     function calculate(topMax, bottomMax) {
         while(true) {
             if(goes > 60) {
@@ -284,10 +321,10 @@ JsCave.Barriers = (function () {
     }
 
     return that;
-}());
+};
 
 
-JsCave.Walls = (function () {
+JsCave.WallsMaker = function () {
     function fillArray() {
         offArray.shift();
         while(offArray.length * hBlockSize < JsCave.width) {
@@ -342,7 +379,7 @@ JsCave.Walls = (function () {
         vBlockSize = 2,
         lastGoUp = 0,
         directionBias = 0.9, //likelihood of tunnel direction continuing
-        narrowing = 0.1; //how much the tunnel narrows each time
+        narrowing = 0.1; //how much the tunnel narrows each frame
 
     that.init = function () {
         startingHeight = tunnelHeight = JsCave.height * 3 / 4;
@@ -384,9 +421,10 @@ JsCave.Walls = (function () {
 
     return that;
 
-}());
+};
 
-JsCave.Text = (function () {
+
+JsCave.TextMaker = function () {
     function loadFont() {
         if(font === undefined) {
             $.ajax({async: false,
@@ -427,4 +465,4 @@ JsCave.Text = (function () {
     }
     
     return that;
-}());
+};
