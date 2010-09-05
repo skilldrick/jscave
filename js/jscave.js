@@ -1,4 +1,4 @@
-/* Author: 
+/* author: 
 Skilldrick: skilldrick [at] gmail.com
 */
 
@@ -190,7 +190,7 @@ JsCave.Snake = (function () {
     var hpos;
     var size = 5;
     var dy = 1;
-    var ddy = 1;
+    var ddy = 1.3;
     var pressed = false;
 
     $(document).keydown(function (event) {
@@ -290,7 +290,7 @@ JsCave.Barriers = (function () {
 JsCave.Walls = (function () {
     function fillArray() {
         offArray.shift();
-        while(offArray.length * blockSize < JsCave.width) {
+        while(offArray.length * hBlockSize < JsCave.width) {
             var topOffset = nextOffset();
             var bottomOffset = Math.floor(topOffset + tunnelHeight);
             var barrierTop = JsCave.Barriers.getNew(topOffset, bottomOffset);
@@ -298,32 +298,34 @@ JsCave.Walls = (function () {
         }
     }
 
-    function getZeroOrOne() {
-        return Math.floor(Math.random() * 2);
+    function getRandomBoolean() {
+        return !!Math.round(Math.random());
     }
 
     function nextOffset() {
         var minOffset = 0;
         var maxOffset = JsCave.height - tunnelHeight;
-        var goUp = getZeroOrOne();
-        if(lastGoUp) {
-            goUp = getZeroOrOne() || goUp;
+        var goUp = getRandomBoolean();
+        if(lastGoUp) { //increase the chance that direction will continue
+            goUp = getRandomBoolean() || goUp;
         }
         else {
-            goUp = goUp && getZeroOrOne();
+            goUp = getRandomBoolean() && goUp;
         }
         lastGoUp = goUp;
 
         if(goUp) {
-            offset -= 1;
-            if(offset < minOffset) {
-                offset += 1;
+            offset -= vBlockSize;
+            if(offset < minOffset) { //reverse direction if limit reached
+                offset += vBlockSize;
+                lastGoUp = !goUp;
             }
         }
         else {
-            offset += 1;
-            if(offset > maxOffset) {
-                offset -= 1;
+            offset += vBlockSize;
+            if(offset > maxOffset) { //reverse direction if limit reached
+                offset -= vBlockSize;
+                lastGoUp = !goUp;
             }
         }
         return offset;
@@ -335,9 +337,10 @@ JsCave.Walls = (function () {
         offset,
         offArray = [];
         counter = 0,
-        blockSize = 5,
+        hBlockSize = 5,
+        vBlockSize = 2,
         lastGoUp = 0,
-        narrowing = 0.2;
+        narrowing = 0.1; //how much the tunnel narrows each time
 
     that.init = function () {
         startingHeight = tunnelHeight = JsCave.height * 3 / 4;
@@ -357,19 +360,19 @@ JsCave.Walls = (function () {
             var bottomEdge = offArray[i][1];
             var bottomHeight = height - bottomEdge;
             var barrierTop = offArray[i][2];
-            JsCave.ctx.fillRect(i * blockSize, topEdge,
-                                blockSize, topHeight);
-            JsCave.ctx.fillRect(i * blockSize, bottomEdge,
-                                blockSize, bottomHeight);
+            JsCave.ctx.fillRect(i * hBlockSize, topEdge,
+                                hBlockSize, topHeight);
+            JsCave.ctx.fillRect(i * hBlockSize, bottomEdge,
+                                hBlockSize, bottomHeight);
             if(barrierTop !== false) {
-                JsCave.Barriers.draw(i * blockSize, barrierTop);
+                JsCave.Barriers.draw(i * hBlockSize, barrierTop);
             }
         }
         JsCave.ctx.restore();
     }
 
     that.offsetAt = function (position) {
-        var index = Math.floor(position / blockSize);
+        var index = Math.floor(position / hBlockSize);
         return offArray[index - 1];
     }
 
