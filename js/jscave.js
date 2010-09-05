@@ -21,6 +21,8 @@ $(document).ready(function () {
 var JsCave = JsCave || {};
 
 JsCave.init = function () {
+    JsCave.gameOver = false;
+    JsCave.restart = false;
     JsCave.Game = JsCave.GameMaker();
     JsCave.Collision = JsCave.CollisionMaker();
     JsCave.Snake = JsCave.SnakeMaker();
@@ -40,6 +42,7 @@ JsCave.init = function () {
 
 JsCave.GameMaker = function () {
     function gameOver() {
+        JsCave.gameOver = true;
         that.ctx.save();
         that.ctx.fillStyle = rgba(255, 255, 255, 0.5);
         that.ctx.fillRect(0, 0, width, height);
@@ -67,11 +70,15 @@ JsCave.GameMaker = function () {
         $(document).keydown(function (event) {
             if(event.keyCode == 82) { //'r'
                 $(this).unbind(event);
-                JsCave.init();
+                if(!JsCave.gameOver) { //'r' pressed during game
+                    JsCave.restart = true; //wait until next frame to init
+                }
+                else {
+                    JsCave.init();
+                }
             }
         });
     }
-
 
     function welcomeScreen() {
         that.canvas.width = that.canvas.width;
@@ -94,6 +101,9 @@ JsCave.GameMaker = function () {
         }
         else if(JsCave.gameOver) {
             gameOver();
+        }
+        else if(JsCave.restart) {
+            JsCave.init();
         }
         else {
             setTimeout(gameLoop, 100);
