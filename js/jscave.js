@@ -46,6 +46,13 @@ JsCave.GameMaker = function () {
         that.ctx.clearRect(0, 0, width, height);
     }
 
+    function fillWithWhite() {
+        ctx.save();
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, width, height);
+        ctx.restore();
+    }
+
     function setThrustListener() {
         $(document).keydown(function (event) {
             if(event.keyCode == 32) { //' '
@@ -73,22 +80,21 @@ JsCave.GameMaker = function () {
     function welcomeScreen() {
         that.canvas.width = that.canvas.width;
         clearScreen();
-        score = 0;
-        drawScore();
-        JsCave.Text.renderString('jscave', 20, 5, 1);
-        JsCave.Text.renderString('press space', 11, 5, 3);
-        JsCave.Text.renderString('to begin', 16, 5, 4);
-        JsCave.Text.renderString('press space', 11, 5, 6);
-        JsCave.Text.renderString('to go up', 16, 5, 7);
+        fillWithWhite();
+        JsCave.Text.renderString('jscave', 20, 2, 1);
+        JsCave.Text.renderString('press space', 11, 2, 3);
+        JsCave.Text.renderString('to begin', 16, 2, 4);
+        JsCave.Text.renderString('press space', 11, 2, 6);
+        JsCave.Text.renderString('to go up', 16, 2, 7);
         
         setThrustListener();
     }
 
-    var i = 0;
+    var i = 0; //REMOVE THIS
 
     function gameLoop() {
-        score += scoreIncrement;
-        that.draw();
+        JsCave.Score.inc();
+        draw();
         i++;
         if(checkCollision()) {
             drawCollision(0, gameOver);
@@ -117,10 +123,6 @@ JsCave.GameMaker = function () {
         that.ctx.restore();
     }
 
-    function drawScore() {
-        $('#htmlscore p').html(score);
-    }
-
     function checkCollision() {
         return JsCave.Collision.detect();
     }
@@ -145,14 +147,20 @@ JsCave.GameMaker = function () {
         }
     }
 
+    function draw() {
+        clearScreen();
+        drawBackground();
+        JsCave.Walls.draw();
+        JsCave.Snake.draw();
+        JsCave.Score.draw();
+        drawBorder();
+    }
+
     var that = {},
         canvas,
         ctx,
-        scorectx,
         width,
-        height,
-        score = 0,
-        scoreIncrement = 3;
+        height;
     
 
     that.start = function () {
@@ -160,34 +168,67 @@ JsCave.GameMaker = function () {
         that.canvas = canvas;
         width = JsCave.width = canvas.width;
         height = JsCave.height = canvas.height;
-        var scoreCanvas = $('#score')[0];
-
         JsCave.Snake = JsCave.SnakeMaker();
         JsCave.Walls = JsCave.WallsMaker();
+        JsCave.Score = JsCave.ScoreMaker();
+
         
         if(canvas.getContext) {
             ctx = canvas.getContext('2d');
-            scorectx = scoreCanvas.getContext('2d');
             i = 1;
             JsCave.ctx = that.ctx = ctx;
-            JsCave.scorectx = that.scorectx = scorectx;
             JsCave.Text = JsCave.TextMaker(that.ctx);
-            JsCave.ScoreText = JsCave.TextMaker(that.ctx);
             welcomeScreen();
         }
     }
 
-    that.draw = function () {
-        clearScreen();
-        drawBackground();
-        JsCave.Walls.draw();
-        JsCave.Snake.draw();
-        drawBorder();
-        drawScore();
-    }
-
     return that;
 };
+
+
+JsCave.ScoreMaker = function () {
+    var that = {};
+    var score = 0;
+    var scoreInc = 3;
+    var canvas;
+    var ctx;
+    var width;
+    var height;
+
+    that.inc = function () {
+        score += scoreInc;
+    };
+
+    that.set = function (newScore) {
+        score = newScore;
+    };
+
+    that.draw = function () {
+        ctx.clearRect(0, 0,
+                      canvas.width,
+                      canvas.height);
+        var scoreString = "" + score;
+        var padding = 5;
+        while(scoreString.length < padding) {
+            scoreString = "0" + scoreString;
+        }
+        JsCave.ScoreText.renderString(scoreString, 22, 0, 1);
+    };
+
+    that.init = function () {
+        canvas = $('#score')[0];
+        if(canvas.getContext) {
+            ctx = canvas.getContext('2d');
+            JsCave.ScoreText = JsCave.TextMaker(ctx, 'white');
+        }
+        that.set(0);
+        that.draw();
+    };
+
+    that.init();
+
+    return that;
+}    
 
 
 JsCave.CollisionMaker = function () {
@@ -422,7 +463,7 @@ JsCave.WallsMaker = function () {
 };
 
 
-JsCave.TextMaker = function (ctx) {
+JsCave.TextMaker = function (ctx, colour) {
     function loadFont() {
         if(font === undefined) {
             $.ajax({async: false,
@@ -436,7 +477,9 @@ JsCave.TextMaker = function (ctx) {
     }
             
     function drawSquare(xOffset, yOffset) {
-        ctx.fillRect(xOffset * blockSize, yOffset * blockSize, blockSize, blockSize);
+        ctx.fillRect(xOffset * blockSize,
+                     yOffset * blockSize,
+                     blockSize, blockSize);
     }
 
     function drawLetter(letter, xOffset, yOffset) {
@@ -452,6 +495,10 @@ JsCave.TextMaker = function (ctx) {
     var that = {};
     var blockSize = 2;
     var font;
+    if(!colour) {
+        colour = 'black';
+    }
+    ctx.fillStyle = colour;
     
     that.renderString = function (str, x, y, lineNumber) {
         loadFont();
