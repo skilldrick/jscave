@@ -298,21 +298,22 @@ JsCave.Walls = (function () {
         }
     }
 
-    function getRandomBoolean() {
-        return !!Math.round(Math.random());
+    function goUpOrDown() {
+        var goUp;
+        if(lastGoUp) { //increase chance of going up again
+            goUp = Math.random() < directionBias;
+        }
+        else { //increase chance of going down again
+            goUp = Math.random() > directionBias;
+        }
+        lastGoUp = goUp;
+        return goUp;
     }
 
     function nextOffset() {
         var minOffset = 0;
         var maxOffset = JsCave.height - tunnelHeight;
-        var goUp = getRandomBoolean();
-        if(lastGoUp) { //increase the chance that direction will continue
-            goUp = getRandomBoolean() || goUp;
-        }
-        else {
-            goUp = getRandomBoolean() && goUp;
-        }
-        lastGoUp = goUp;
+        var goUp = goUpOrDown();
 
         if(goUp) {
             offset -= vBlockSize;
@@ -340,6 +341,7 @@ JsCave.Walls = (function () {
         hBlockSize = 5,
         vBlockSize = 2,
         lastGoUp = 0,
+        directionBias = 0.9, //likelihood of tunnel direction continuing
         narrowing = 0.1; //how much the tunnel narrows each time
 
     that.init = function () {
