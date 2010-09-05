@@ -33,13 +33,6 @@ JsCave.init = function () {
 }
 
 
-
-//JsCave.Init = function () {
-
-//}();
-
-
-
 JsCave.GameMaker = function () {
     function gameOver() {
         JsCave.gameOver = true;
@@ -83,9 +76,14 @@ JsCave.GameMaker = function () {
     function welcomeScreen() {
         that.canvas.width = that.canvas.width;
         clearScreen();
-        JsCave.Text.renderString('jscave', 20, 5, 2);
-        JsCave.Text.renderString('press space', 11, 5, 4);
-        JsCave.Text.renderString('to begin', 16, 5, 5);
+        score = 0;
+        drawScore();
+        JsCave.Text.renderString('jscave', 20, 5, 1);
+        JsCave.Text.renderString('press space', 11, 5, 3);
+        JsCave.Text.renderString('to begin', 16, 5, 4);
+        JsCave.Text.renderString('press space', 11, 5, 6);
+        JsCave.Text.renderString('to go up', 16, 5, 7);
+        
         setThrustListener();
     }
 
@@ -94,7 +92,6 @@ JsCave.GameMaker = function () {
     function gameLoop() {
         score += scoreIncrement;
         that.draw();
-        console.log('frame' + i);
         i++;
         if(checkCollision()) {
             drawCollision(0, gameOver);
@@ -158,7 +155,7 @@ JsCave.GameMaker = function () {
         width,
         height,
         score = 0,
-        scoreIncrement = 5;
+        scoreIncrement = 3;
     
 
     that.start = function () {
