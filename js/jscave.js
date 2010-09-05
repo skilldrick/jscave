@@ -25,10 +25,7 @@ JsCave.init = function () {
     JsCave.restart = false;
     JsCave.Game = JsCave.GameMaker();
     JsCave.Collision = JsCave.CollisionMaker();
-    JsCave.Snake = JsCave.SnakeMaker();
     JsCave.Barriers = JsCave.BarriersMaker();
-    JsCave.Walls = JsCave.WallsMaker();
-    JsCave.Text = JsCave.TextMaker();
     JsCave.Game.start();
 }
 
@@ -164,8 +161,9 @@ JsCave.GameMaker = function () {
         width = JsCave.width = canvas.width;
         height = JsCave.height = canvas.height;
         var scoreCanvas = $('#score')[0];
-        JsCave.Snake.init();
-        JsCave.Walls.init();
+
+        JsCave.Snake = JsCave.SnakeMaker();
+        JsCave.Walls = JsCave.WallsMaker();
         
         if(canvas.getContext) {
             ctx = canvas.getContext('2d');
@@ -173,6 +171,8 @@ JsCave.GameMaker = function () {
             i = 1;
             JsCave.ctx = that.ctx = ctx;
             JsCave.scorectx = that.scorectx = scorectx;
+            JsCave.Text = JsCave.TextMaker(that.ctx);
+            JsCave.ScoreText = JsCave.TextMaker(that.ctx);
             welcomeScreen();
         }
     }
@@ -228,11 +228,11 @@ JsCave.SnakeMaker = function () {
     }
 
     var that = {};
-    var vpos;
+    var vpos = JsCave.height / 3;
     var history = [];
     var historyMax = 4;
-    var hpos;
     var size = 5;
+    var hpos = size * historyMax;
     var dy = 1;
     var ddy = 1.3;
     var pressed = false;
@@ -249,11 +249,6 @@ JsCave.SnakeMaker = function () {
         }
     });
 
-    that.init = function () {
-        vpos = JsCave.height / 3;
-        hpos = size * historyMax;
-    }
- 
     that.draw = function () {
         calculateDirection();
         if(pressed) {
@@ -377,9 +372,9 @@ JsCave.WallsMaker = function () {
     }
 
     var that = {},
-        startingHeight,
-        tunnelHeight, //set in init()
-        offset,
+        tunnelHeight = JsCave.height * 3 / 4,
+        startingHeight = tunnelHeight,
+        offset = (JsCave.height - tunnelHeight) / 2,
         offArray = [];
         counter = 0,
         hBlockSize = 5,
@@ -388,10 +383,6 @@ JsCave.WallsMaker = function () {
         directionBias = 0.9, //likelihood of tunnel direction continuing
         narrowing = 0.1; //how much the tunnel narrows each frame
 
-    that.init = function () {
-        startingHeight = tunnelHeight = JsCave.height * 3 / 4;
-        offset = (JsCave.height - tunnelHeight) / 2;
-    }
 
     that.draw = function () {
         var width = JsCave.width;
@@ -431,7 +422,7 @@ JsCave.WallsMaker = function () {
 };
 
 
-JsCave.TextMaker = function () {
+JsCave.TextMaker = function (ctx) {
     function loadFont() {
         if(font === undefined) {
             $.ajax({async: false,
@@ -445,7 +436,7 @@ JsCave.TextMaker = function () {
     }
             
     function drawSquare(xOffset, yOffset) {
-        JsCave.ctx.fillRect(xOffset * blockSize, yOffset * blockSize, blockSize, blockSize);
+        ctx.fillRect(xOffset * blockSize, yOffset * blockSize, blockSize, blockSize);
     }
 
     function drawLetter(letter, xOffset, yOffset) {
