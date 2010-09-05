@@ -2,6 +2,10 @@
 Skilldrick: skilldrick [at] gmail.com
 */
 
+/*global $*/
+
+"use strict";
+
 function hsl(hue, saturation, luminance) {
     return "hsl(" + hue + ", " + saturation + "%, " + luminance + "%)";
 }
@@ -14,11 +18,11 @@ function rgba(r, g, b, a) {
     return "rgba(" + r + ", " + g + ", " + b + ", " + a + ")";
 }
 
+var JsCave = {};
+
 $(document).ready(function () {
     JsCave.init();
 });
-
-var JsCave = JsCave || {};
 
 JsCave.init = function () {
     JsCave.gameOver = false;
@@ -27,10 +31,16 @@ JsCave.init = function () {
     JsCave.Collision = JsCave.CollisionMaker();
     JsCave.Barriers = JsCave.BarriersMaker();
     JsCave.Game.start();
-}
+};
 
 
 JsCave.GameMaker = function () {
+    var that = {},
+        canvas,
+        ctx,
+        width,
+        height;
+    
     function gameOver() {
         JsCave.gameOver = true;
         that.ctx.save();
@@ -55,7 +65,7 @@ JsCave.GameMaker = function () {
 
     function setThrustListener() {
         $(document).keydown(function (event) {
-            if(event.keyCode == 32) { //' '
+            if (event.keyCode == 32) { //' '
                 $(this).unbind(event);
                 setRetryListener();
                 gameLoop();
@@ -65,9 +75,9 @@ JsCave.GameMaker = function () {
 
     function setRetryListener() {
         $(document).keydown(function (event) {
-            if(event.keyCode == 82) { //'r'
+            if (event.keyCode == 82) { //'r'
                 $(this).unbind(event);
-                if(!JsCave.gameOver) { //'r' pressed during game
+                if (!JsCave.gameOver) { //'r' pressed during game
                     JsCave.restart = true; //wait until next frame to init
                 }
                 else {
@@ -90,19 +100,16 @@ JsCave.GameMaker = function () {
         setThrustListener();
     }
 
-    var i = 0; //REMOVE THIS
-
     function gameLoop() {
         JsCave.Score.inc();
         draw();
-        i++;
-        if(checkCollision()) {
+        if (checkCollision()) {
             drawCollision(0, gameOver);
         }
-        else if(JsCave.gameOver) {
+        else if (JsCave.gameOver) {
             gameOver();
         }
-        else if(JsCave.restart) {
+        else if (JsCave.restart) {
             JsCave.init();
         }
         else {
@@ -115,8 +122,8 @@ JsCave.GameMaker = function () {
     }
 
     function drawBackground() {
-        var progression = JsCave.Walls.progression();
-        var hue = Math.floor(100 - (progression * 100));
+        var progression = JsCave.Walls.progression(),
+            hue = Math.floor(100 - (progression * 100));
         that.ctx.save();
         that.ctx.fillStyle = hsl(hue, 70, 50);
         that.ctx.fillRect(0, 0, width, height);
@@ -128,7 +135,7 @@ JsCave.GameMaker = function () {
     }
 
     function drawCollision(count, callback) {
-        if(count === undefined) {
+        if (count === undefined) {
             count = 0;
         }
         count = +count;
@@ -137,11 +144,11 @@ JsCave.GameMaker = function () {
         that.ctx.strokeStyle = "Red";
         that.ctx.arc(snakeCentre[0], snakeCentre[1], count * 4 + 4, 0, Math.PI * 2, true);
         that.ctx.stroke();
-        if(count < 5) {
+        if (count < 5) {
             setTimeout(drawCollision, 100, count + 1, callback);
         }
         else {
-            if(callback !== undefined) {
+            if (callback !== undefined) {
                 callback();
             }
         }
@@ -156,13 +163,6 @@ JsCave.GameMaker = function () {
         drawBorder();
     }
 
-    var that = {},
-        canvas,
-        ctx,
-        width,
-        height;
-    
-
     that.start = function () {
         var canvas = $('#game-board')[0];
         that.canvas = canvas;
@@ -173,27 +173,27 @@ JsCave.GameMaker = function () {
         JsCave.Score = JsCave.ScoreMaker();
 
         
-        if(canvas.getContext) {
+        if (canvas.getContext) {
             ctx = canvas.getContext('2d');
-            i = 1;
             JsCave.ctx = that.ctx = ctx;
             JsCave.Text = JsCave.TextMaker(that.ctx);
             welcomeScreen();
         }
-    }
+    };
 
     return that;
 };
 
 
 JsCave.ScoreMaker = function () {
-    var that = {};
-    var score = 0;
-    var scoreInc = 3;
-    var canvas;
-    var ctx;
-    var width;
-    var height;
+    var that = {},
+        score = 0,
+        scoreInc = 3,
+        canvas,
+        ctx,
+        scoreColour = "#ccc",
+        width,
+        height;
 
     that.inc = function () {
         score += scoreInc;
@@ -204,11 +204,9 @@ JsCave.ScoreMaker = function () {
     };
 
     that.draw = function () {
-        ctx.clearRect(0, 0,
-                      canvas.width,
-                      canvas.height);
-        var scoreString = "" + score;
-        var padding = 5;
+        var scoreString = "" + score,
+            padding = 5;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         while(scoreString.length < padding) {
             scoreString = "0" + scoreString;
         }
@@ -217,9 +215,9 @@ JsCave.ScoreMaker = function () {
 
     that.init = function () {
         canvas = $('#score')[0];
-        if(canvas.getContext) {
+        if (canvas.getContext) {
             ctx = canvas.getContext('2d');
-            JsCave.ScoreText = JsCave.TextMaker(ctx, 'white');
+            JsCave.ScoreText = JsCave.TextMaker(ctx, scoreColour);
         }
         that.set(0);
         that.draw();
@@ -228,24 +226,25 @@ JsCave.ScoreMaker = function () {
     that.init();
 
     return that;
-}    
+};
 
 
 JsCave.CollisionMaker = function () {
     var that = {};
 
     that.detect = function () {
-        var snakePos = JsCave.Snake.position();
-        var wallsPos = JsCave.Walls.offsetAt(snakePos.frontEdge);
-        var wallHit = snakePos.topEdge < wallsPos[0] ||
-            snakePos.bottomEdge > wallsPos[1];
-        var barrierHit = false;
-        if(wallsPos[2] !== false) {
+        var snakePos = JsCave.Snake.position(),
+            wallsPos = JsCave.Walls.offsetAt(snakePos.frontEdge),
+            wallHit = snakePos.topEdge < wallsPos[0] ||
+            snakePos.bottomEdge > wallsPos[1],
+            barrierHit = false;
+        
+        if (wallsPos[2] !== false) {
             barrierHit = snakePos.topEdge < (wallsPos[2] + JsCave.Barriers.height) &&
                 snakePos.bottomEdge > wallsPos[2];
         }
         return wallHit || barrierHit;
-    }
+    };
 
     return that;
 };
@@ -253,7 +252,7 @@ JsCave.CollisionMaker = function () {
 
 JsCave.SnakeMaker = function () {
     function calculateDirection() {
-        if(pressed) {
+        if (pressed) {
             dy -= ddy;
         }
         else {
@@ -268,31 +267,31 @@ JsCave.SnakeMaker = function () {
         history.shift();
     }
 
-    var that = {};
-    var vpos = JsCave.height / 3;
-    var history = [];
-    var historyMax = 4;
-    var size = 5;
-    var hpos = size * historyMax;
-    var dy = 1;
-    var ddy = 1.3;
-    var pressed = false;
+    var that = {},
+        vpos = JsCave.height / 3,
+        history = [],
+        historyMax = 4,
+        size = 5,
+        hpos = size * historyMax,
+        dy = 1,
+        ddy = 1.3,
+        pressed = false;
 
     $(document).keydown(function (event) {
-        if(event.keyCode == 32) {
+        if (event.keyCode == 32) {
             pressed = true;
         }
     });
 
     $(document).keyup(function (event) {
-        if(event.keyCode == 32) {
+        if (event.keyCode == 32) {
             pressed = false;
         }
     });
 
     that.draw = function () {
         calculateDirection();
-        if(pressed) {
+        if (pressed) {
             vpos += dy;
         }
         else {
@@ -302,21 +301,21 @@ JsCave.SnakeMaker = function () {
         for(var i = 0; i < history.length; i+=1) {
             JsCave.ctx.fillRect(i * size, history[i], size, size);
         }
-    }
+    };
 
     that.position = function () {
         return {
             frontEdge:  hpos + size,
             topEdge:    Math.floor(vpos),
             bottomEdge: Math.floor(vpos) + size
-        }
-    }
+        };
+    };
 
     that.centre = function () {
-        var x = hpos + (size / 2);
-        var y = vpos + (size / 2);
+        var x = hpos + (size / 2),
+            y = vpos + (size / 2);
         return [x, y];
-    }
+    };
 
     return that;
 };
@@ -325,11 +324,11 @@ JsCave.SnakeMaker = function () {
 JsCave.BarriersMaker = function () {
     function calculate(topMax, bottomMax) {
         while(true) {
-            if(goes > 60) {
+            if (goes > 60) {
                 return false;
             }
             var number = Math.floor(Math.random() * JsCave.height);
-            if((number + height) > topMax && number < bottomMax) {
+            if ((number + height) > topMax && number < bottomMax) {
                 goes = 0;
                 return number;
             }
@@ -337,19 +336,19 @@ JsCave.BarriersMaker = function () {
         }
     }
     
-    var that = {};
-    var distance = 10;
-    var count = 0;
-    var width = 5;
-    var height = 20;
-    var goes = 0;
-    var gracePeriod = 2; //this many barriers are skipped at beginning
+    var that = {},
+        distance = 10,
+        count = 0,
+        width = 5,
+        height = 20,
+        goes = 0,
+        gracePeriod = 2; //this many barriers are skipped at beginning
     that.height = height;
 
     that.getNew = function (topMax, bottomMax) {
-        if(count >= distance) {
+        if (count >= distance) {
             count = 0;
-            if(gracePeriod > 0) {
+            if (gracePeriod > 0) {
                 gracePeriod -= 1;
                 return false;
             }
@@ -357,11 +356,11 @@ JsCave.BarriersMaker = function () {
         }
         count += 1;
         return false;
-    }
+    };
 
     that.draw = function (left, top) {
         JsCave.ctx.fillRect(left, top, width, height);
-    }
+    };
 
     return that;
 };
@@ -371,16 +370,17 @@ JsCave.WallsMaker = function () {
     function fillArray() {
         offArray.shift();
         while(offArray.length * hBlockSize < JsCave.width) {
-            var topOffset = nextOffset();
-            var bottomOffset = Math.floor(topOffset + tunnelHeight);
-            var barrierTop = JsCave.Barriers.getNew(topOffset, bottomOffset);
+            var topOffset = nextOffset(),
+                bottomOffset = Math.floor(topOffset + tunnelHeight),
+                barrierTop = JsCave.Barriers.getNew(topOffset,
+                                                    bottomOffset);
             offArray.push([topOffset, bottomOffset, barrierTop]);
         }
     }
 
     function goUpOrDown() {
         var goUp;
-        if(lastGoUp) { //increase chance of going up again
+        if (lastGoUp) { //increase chance of going up again
             goUp = Math.random() < directionBias;
         }
         else { //increase chance of going down again
@@ -391,20 +391,20 @@ JsCave.WallsMaker = function () {
     }
 
     function nextOffset() {
-        var minOffset = 0;
-        var maxOffset = JsCave.height - tunnelHeight;
-        var goUp = goUpOrDown();
+        var minOffset = 0,
+            maxOffset = JsCave.height - tunnelHeight,
+            goUp = goUpOrDown();
 
-        if(goUp) {
+        if (goUp) {
             offset -= vBlockSize;
-            if(offset < minOffset) { //reverse direction if limit reached
+            if (offset < minOffset) { //reverse direction if limit reached
                 offset += vBlockSize;
                 lastGoUp = !goUp;
             }
         }
         else {
             offset += vBlockSize;
-            if(offset > maxOffset) { //reverse direction if limit reached
+            if (offset > maxOffset) { //reverse direction if limit reached
                 offset -= vBlockSize;
                 lastGoUp = !goUp;
             }
@@ -416,7 +416,7 @@ JsCave.WallsMaker = function () {
         tunnelHeight = JsCave.height * 3 / 4,
         startingHeight = tunnelHeight,
         offset = (JsCave.height - tunnelHeight) / 2,
-        offArray = [];
+        offArray = [],
         counter = 0,
         hBlockSize = 5,
         vBlockSize = 2,
@@ -426,37 +426,37 @@ JsCave.WallsMaker = function () {
 
 
     that.draw = function () {
-        var width = JsCave.width;
-        var height = JsCave.height;
+        var width = JsCave.width,
+            height = JsCave.height;
         fillArray();
         tunnelHeight -= narrowing;
         JsCave.ctx.save();
         JsCave.ctx.fillStyle = rgb(70, 60, 40);
         for(var i = 0; i < offArray.length; i+=1) {
-            var topEdge = 0;
-            var topHeight = offArray[i][0];
-            var bottomEdge = offArray[i][1];
-            var bottomHeight = height - bottomEdge;
-            var barrierTop = offArray[i][2];
+            var topEdge = 0,
+                topHeight = offArray[i][0],
+                bottomEdge = offArray[i][1],
+                bottomHeight = height - bottomEdge,
+                barrierTop = offArray[i][2];
             JsCave.ctx.fillRect(i * hBlockSize, topEdge,
                                 hBlockSize, topHeight);
             JsCave.ctx.fillRect(i * hBlockSize, bottomEdge,
                                 hBlockSize, bottomHeight);
-            if(barrierTop !== false) {
+            if (barrierTop !== false) {
                 JsCave.Barriers.draw(i * hBlockSize, barrierTop);
             }
         }
         JsCave.ctx.restore();
-    }
+    };
 
     that.offsetAt = function (position) {
         var index = Math.floor(position / hBlockSize);
         return offArray[index - 1];
-    }
+    };
 
     that.progression = function () {
         return (startingHeight - tunnelHeight) / startingHeight;
-    }
+    };
 
     return that;
 
@@ -465,7 +465,7 @@ JsCave.WallsMaker = function () {
 
 JsCave.TextMaker = function (ctx, colour) {
     function loadFont() {
-        if(font === undefined) {
+        if (font === undefined) {
             $.ajax({async: false,
                     dataType: 'json',
                     url: 'js/font.json',
@@ -485,29 +485,31 @@ JsCave.TextMaker = function (ctx, colour) {
     function drawLetter(letter, xOffset, yOffset) {
         for(var row = 0; row < letter.length; row+=1) {
             for(var col = 0; col < letter[row].length; col += 1) {
-                if(letter[row][col]) {
+                if (letter[row][col]) {
                     drawSquare(col + xOffset, row + yOffset);
                 }
             }
         }
     }
 
-    var that = {};
-    var blockSize = 2;
-    var font;
-    if(!colour) {
-        colour = 'black';
+    var that = {},
+        blockSize = 2,
+        font;
+    if (colour === undefined) {
+        colour = "#222";
     }
-    ctx.fillStyle = colour;
     
     that.renderString = function (str, x, y, lineNumber) {
+        ctx.save();
+        ctx.fillStyle = colour;
         loadFont();
         str = str.toUpperCase();
         for(var i = 0; i < str.length; i+=1) {
             var letter = font[str[i]];
             drawLetter(letter, i * 4 + x, lineNumber * 7 + y);
         }
-    }
+        ctx.restore();
+    };
     
     return that;
 };
