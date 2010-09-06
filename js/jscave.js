@@ -140,10 +140,12 @@ JsCave.GameMaker = function () {
         }
         count = +count;
         var snakeCentre = JsCave.Snake.centre();
+        that.ctx.save();
         that.ctx.beginPath();
         that.ctx.strokeStyle = "Red";
         that.ctx.arc(snakeCentre[0], snakeCentre[1], count * 4 + 4, 0, Math.PI * 2, true);
         that.ctx.stroke();
+        that.ctx.restore();
         if (count < 5) {
             setTimeout(drawCollision, 100, count + 1, callback);
         }
@@ -236,9 +238,9 @@ JsCave.CollisionMaker = function () {
         var snakePos = JsCave.Snake.position(),
             wallsPos = JsCave.Walls.offsetAt(snakePos.frontEdge),
             wallHit = snakePos.topEdge < wallsPos[0] ||
-            snakePos.bottomEdge > wallsPos[1],
+                      snakePos.bottomEdge > wallsPos[1],
             barrierHit = false;
-        
+
         if (wallsPos[2] !== false) {
             barrierHit = snakePos.topEdge < (wallsPos[2] + JsCave.Barriers.height) &&
                 snakePos.bottomEdge > wallsPos[2];
@@ -270,7 +272,7 @@ JsCave.SnakeMaker = function () {
     var that = {},
         vpos = JsCave.height / 3,
         history = [],
-        historyMax = 4,
+        historyMax = 6,
         size = 5,
         hpos = size * historyMax,
         dy = 1,
@@ -305,14 +307,14 @@ JsCave.SnakeMaker = function () {
 
     that.position = function () {
         return {
-            frontEdge:  hpos + size,
+            frontEdge:  hpos,
             topEdge:    Math.floor(vpos),
             bottomEdge: Math.floor(vpos) + size
         };
     };
 
     that.centre = function () {
-        var x = hpos + (size / 2),
+        var x = hpos - (size / 2),
             y = vpos + (size / 2);
         return [x, y];
     };
