@@ -25,6 +25,7 @@ $(document).ready(function () {
 });
 
 JsCave.init = function () {
+    JsCave.setCanvas();
     JsCave.gameOver = false;
     JsCave.restart = false;
     JsCave.Game = JsCave.GameMaker();
@@ -33,13 +34,33 @@ JsCave.init = function () {
     JsCave.Game.start();
 };
 
+JsCave.setCanvas = function () {
+    var queryString = window.location.search.substring(1);
+    var canvasSizes = {
+        "tall": [128, 512],
+        "wide": [512, 128],
+        "big": [512, 512]
+    }
+
+    var canvasSize = [128, 128];
+
+    if(queryString in canvasSizes) {
+        canvasSize = canvasSizes[queryString];
+    }
+
+    $('#game-board')[0].width = canvasSize[0];
+    $('#game-board')[0].height = canvasSize[1];
+    $('#score')[0].width = canvasSize[0];
+}
+
 
 JsCave.GameMaker = function () {
     var that = {},
         canvas,
         ctx,
         width,
-        height;
+        height,
+        speed = 100;
     
     function gameOver() {
         JsCave.gameOver = true;
@@ -47,9 +68,9 @@ JsCave.GameMaker = function () {
         that.ctx.fillStyle = rgba(255, 255, 255, 0.5);
         that.ctx.fillRect(0, 0, width, height);
         that.ctx.restore();
-        JsCave.Text.renderString('game over', 15, 5, 2);
-        JsCave.Text.renderString('press r', 17, 5, 4);
-        JsCave.Text.renderString('to retry', 16, 5, 5);
+        JsCave.Text.renderString('game over', 5, 2);
+        JsCave.Text.renderString('press r', 5, 4);
+        JsCave.Text.renderString('to retry', 5, 5);
     }
 
     function clearScreen() {
@@ -91,11 +112,11 @@ JsCave.GameMaker = function () {
         that.canvas.width = that.canvas.width;
         clearScreen();
         fillWithWhite();
-        JsCave.Text.renderString('jscave', 20, 2, 1);
-        JsCave.Text.renderString('press space', 11, 2, 3);
-        JsCave.Text.renderString('to begin', 16, 2, 4);
-        JsCave.Text.renderString('press space', 11, 2, 6);
-        JsCave.Text.renderString('to go up', 16, 2, 7);
+        JsCave.Text.renderString('jscave', 2, 1);
+        JsCave.Text.renderString('press space', 2, 3);
+        JsCave.Text.renderString('to begin', 2, 4);
+        JsCave.Text.renderString('press space', 2, 6);
+        JsCave.Text.renderString('to go up', 2, 7);
         
         setThrustListener();
     }
@@ -113,12 +134,12 @@ JsCave.GameMaker = function () {
             JsCave.init();
         }
         else {
-            setTimeout(gameLoop, 100);
+            setTimeout(gameLoop, speed);
         }
     }
 
     function drawBorder() {
-        ctx.strokeRect(0.5, 0.5, width - 1, width - 1);
+        ctx.strokeRect(0.5, 0.5, width - 1, height - 1);
     }
 
     function drawBackground() {
@@ -208,18 +229,20 @@ JsCave.ScoreMaker = function () {
     that.draw = function () {
         var scoreString = "" + score,
             padding = 5;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        width = JsCave.scoreWidth = canvas.width;
+        height = JsCave.scoreHeight = canvas.height;
+        ctx.clearRect(0, 0, width, height);
         while(scoreString.length < padding) {
             scoreString = "0" + scoreString;
         }
-        JsCave.ScoreText.renderString(scoreString, 22, 0, 1);
+        JsCave.ScoreText.renderString(scoreString, 0, 1);
     };
 
     that.init = function () {
         canvas = $('#score')[0];
         if (canvas.getContext) {
             ctx = canvas.getContext('2d');
-            JsCave.ScoreText = JsCave.TextMaker(ctx, scoreColour);
+            JsCave.ScoreText = JsCave.TextMaker(ctx, scoreColour, true);
         }
         that.set(0);
         that.draw();
@@ -465,7 +488,7 @@ JsCave.WallsMaker = function () {
 };
 
 
-JsCave.TextMaker = function (ctx, colour) {
+JsCave.TextMaker = function (ctx, colour, isScore) {
     function loadFont() {
         if (font === undefined) {
             $.ajax({async: false,
@@ -496,16 +519,34 @@ JsCave.TextMaker = function (ctx, colour) {
 
     var that = {},
         blockSize = 2,
-        font;
+        font,
+        fontWidth = 3,
+        fontHeight = 5;
+    
     if (colour === undefined) {
         colour = "#222";
     }
     
-    that.renderString = function (str, x, y, lineNumber) {
+    that.renderString = function (str, y, lineNumber) {
+        var x;
         ctx.save();
         ctx.fillStyle = colour;
         loadFont();
         str = str.toUpperCase();
+        if(!isScore) {
+            var letterWidth = (fontWidth + 1);
+            var textWidth = str.length * letterWidth;
+            var canvasWidth = Math.round(JsCave.width / blockSize);
+            var yOffset = JsCave.height / 2;
+            y += (yOffset - (blockSize * 32)) / blockSize;
+            x = (canvasWidth - textWidth) / 2;
+        }
+        else {
+            var letterWidth = (fontWidth + 1);
+            var canvasWidth = Math.round(JsCave.scoreWidth / blockSize);
+            var textWidth = str.length * letterWidth;
+            x = (canvasWidth - textWidth) / 2;
+        }
         for(var i = 0; i < str.length; i+=1) {
             var letter = font[str[i]];
             drawLetter(letter, i * 4 + x, lineNumber * 7 + y);
