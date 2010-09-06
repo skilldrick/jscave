@@ -3,7 +3,7 @@ Skilldrick: skilldrick [at] gmail.com
 */
 
 /*global $, window*/
-/*jslint browser:true*/
+/*jslint white: true, browser: true, undef: true, nomen: true, eqeqeq: true, plusplus: true, bitwise: true, regexp: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
 
 "use strict";
 
@@ -455,7 +455,7 @@ JsCave.WallsMaker = function () {
 
     that.draw = function () {
         var height = JsCave.height,
-            var i;
+            i;
         fillArray();
         tunnelHeight -= narrowing;
         JsCave.ctx.save();
@@ -506,7 +506,7 @@ JsCave.TextMaker = function (ctx, colour, isScore) {
             $.ajax({async: false,
                     dataType: 'json',
                     url: 'js/font.json',
-                    success: function(data) {
+                    success: function (data) {
                         font = data;
                     }
                    });
@@ -520,7 +520,7 @@ JsCave.TextMaker = function (ctx, colour, isScore) {
     }
 
     function drawLetter(letter, xOffset, yOffset) {
-        for (var row = 0; row < letter.length; row+=1) {
+        for (var row = 0; row < letter.length; row += 1) {
             for (var col = 0; col < letter[row].length; col += 1) {
                 if (letter[row][col]) {
                     drawSquare(col + xOffset, row + yOffset);
