@@ -36,16 +36,15 @@ JsCave.init = function () {
 
 JsCave.setCanvas = function () {
     var queryString = window.location.search.substring(1);
-    var canvasSizes = {
+    var canvasSize = [128, 128];
+    var otherSizes = {
         "tall": [128, 512],
         "wide": [512, 128],
         "big": [512, 512]
     }
 
-    var canvasSize = [128, 128];
-
-    if(queryString in canvasSizes) {
-        canvasSize = canvasSizes[queryString];
+    if(queryString in otherSizes) {
+        canvasSize = otherSizes[queryString];
     }
 
     $('#game-board')[0].width = canvasSize[0];
