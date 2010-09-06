@@ -2,7 +2,8 @@
 Skilldrick: skilldrick [at] gmail.com
 */
 
-/*global $*/
+/*global $, window*/
+/*jslint browser:true*/
 
 "use strict";
 
@@ -25,37 +26,41 @@ $(document).ready(function () {
 });
 
 JsCave.init = function () {
+    var options = {};
+    options.historyMax = 6;
+    options.acceleration = 1.2;
+    options.maxVelocity = 10;
+    
     JsCave.setCanvas();
     JsCave.gameOver = false;
     JsCave.restart = false;
-    JsCave.Game = JsCave.GameMaker();
+    JsCave.Game = JsCave.GameMaker(options);
     JsCave.Collision = JsCave.CollisionMaker();
     JsCave.Barriers = JsCave.BarriersMaker();
     JsCave.Game.start();
 };
 
 JsCave.setCanvas = function () {
-    var queryString = window.location.search.substring(1);
-    var canvasSize = [128, 128];
-    var otherSizes = {
-        "tall": [128, 512],
-        "wide": [512, 128],
-        "big": [512, 512]
-    }
+    var queryString = window.location.search.substring(1),
+        canvasSize = [128, 128],
+        otherSizes = {
+            "tall": [128, 512],
+            "wide": [512, 128],
+            "big": [512, 512]
+        };
 
-    if(queryString in otherSizes) {
+    if (queryString in otherSizes) {
         canvasSize = otherSizes[queryString];
     }
 
     $('#game-board')[0].width = canvasSize[0];
     $('#game-board')[0].height = canvasSize[1];
     $('#score')[0].width = canvasSize[0];
-}
+};
 
 
-JsCave.GameMaker = function () {
+JsCave.GameMaker = function (options) {
     var that = {},
-        canvas,
         ctx,
         width,
         height,
@@ -83,19 +88,9 @@ JsCave.GameMaker = function () {
         ctx.restore();
     }
 
-    function setThrustListener() {
-        $(document).keydown(function (event) {
-            if (event.keyCode == 32) { //' '
-                $(this).unbind(event);
-                setRetryListener();
-                gameLoop();
-            }
-        });
-    }
-
     function setRetryListener() {
         $(document).keydown(function (event) {
-            if (event.keyCode == 82) { //'r'
+            if (event.keyCode === 82) { //'r'
                 $(this).unbind(event);
                 if (!JsCave.gameOver) { //'r' pressed during game
                     JsCave.restart = true; //wait until next frame to init
@@ -105,49 +100,6 @@ JsCave.GameMaker = function () {
                 }
             }
         });
-    }
-
-    function welcomeScreen() {
-        that.canvas.width = that.canvas.width;
-        clearScreen();
-        fillWithWhite();
-        JsCave.Text.renderString('jscave', 2, 1);
-        JsCave.Text.renderString('press space', 2, 3);
-        JsCave.Text.renderString('to begin', 2, 4);
-        JsCave.Text.renderString('press space', 2, 6);
-        JsCave.Text.renderString('to go up', 2, 7);
-        
-        setThrustListener();
-    }
-
-    function gameLoop() {
-        JsCave.Score.inc();
-        draw();
-        if (checkCollision()) {
-            drawCollision(0, gameOver);
-        }
-        else if (JsCave.gameOver) {
-            gameOver();
-        }
-        else if (JsCave.restart) {
-            JsCave.init();
-        }
-        else {
-            setTimeout(gameLoop, speed);
-        }
-    }
-
-    function drawBorder() {
-        ctx.strokeRect(0.5, 0.5, width - 1, height - 1);
-    }
-
-    function drawBackground() {
-        var progression = JsCave.Walls.progression(),
-            hue = Math.floor(100 - (progression * 100));
-        that.ctx.save();
-        that.ctx.fillStyle = hsl(hue, 70, 50);
-        that.ctx.fillRect(0, 0, width, height);
-        that.ctx.restore();
     }
 
     function checkCollision() {
@@ -176,6 +128,19 @@ JsCave.GameMaker = function () {
         }
     }
 
+    function drawBorder() {
+        ctx.strokeRect(0.5, 0.5, width - 1, height - 1);
+    }
+
+    function drawBackground() {
+        var progression = JsCave.Walls.progression(),
+            hue = Math.floor(100 - (progression * 100));
+        that.ctx.save();
+        that.ctx.fillStyle = hsl(hue, 70, 50);
+        that.ctx.fillRect(0, 0, width, height);
+        that.ctx.restore();
+    }
+
     function draw() {
         clearScreen();
         drawBackground();
@@ -185,12 +150,52 @@ JsCave.GameMaker = function () {
         drawBorder();
     }
 
+    function gameLoop() {
+        JsCave.Score.inc();
+        draw();
+        if (checkCollision()) {
+            drawCollision(0, gameOver);
+        }
+        else if (JsCave.gameOver) {
+            gameOver();
+        }
+        else if (JsCave.restart) {
+            JsCave.init();
+        }
+        else {
+            setTimeout(gameLoop, speed);
+        }
+    }
+
+    function setThrustListener() {
+        $(document).keydown(function (event) {
+            if (event.keyCode === 32) { //' '
+                $(this).unbind(event);
+                setRetryListener();
+                gameLoop();
+            }
+        });
+    }
+
+    function welcomeScreen() {
+        that.canvas.width = that.canvas.width;
+        clearScreen();
+        fillWithWhite();
+        JsCave.Text.renderString('jscave', 2, 1);
+        JsCave.Text.renderString('press space', 2, 3);
+        JsCave.Text.renderString('to begin', 2, 4);
+        JsCave.Text.renderString('press space', 2, 6);
+        JsCave.Text.renderString('to go up', 2, 7);
+        
+        setThrustListener();
+    }
+
     that.start = function () {
         var canvas = $('#game-board')[0];
         that.canvas = canvas;
         width = JsCave.width = canvas.width;
         height = JsCave.height = canvas.height;
-        JsCave.Snake = JsCave.SnakeMaker();
+        JsCave.Snake = JsCave.SnakeMaker(options);
         JsCave.Walls = JsCave.WallsMaker();
         JsCave.Score = JsCave.ScoreMaker();
 
@@ -231,7 +236,7 @@ JsCave.ScoreMaker = function () {
         width = JsCave.scoreWidth = canvas.width;
         height = JsCave.scoreHeight = canvas.height;
         ctx.clearRect(0, 0, width, height);
-        while(scoreString.length < padding) {
+        while (scoreString.length < padding) {
             scoreString = "0" + scoreString;
         }
         JsCave.ScoreText.renderString(scoreString, 0, 1);
@@ -274,55 +279,55 @@ JsCave.CollisionMaker = function () {
 };
 
 
-JsCave.SnakeMaker = function () {
+JsCave.SnakeMaker = function (options) {
+    var that = {},
+        vpos = JsCave.height / 3,
+        history = [],
+        historyMax = options.historyMax,
+        size = 5,
+        hpos = size * historyMax,
+        dy = 1,
+        ddy = options.acceleration,
+        maxDy = options.maxVelocity,
+        pressed = false;
+
     function calculateDirection() {
         if (pressed) {
-            dy -= ddy;
+            if (dy > -maxDy) {
+                dy -= ddy;
+            }
         }
         else {
-            dy += ddy;
+            if (dy < maxDy) {
+                dy += ddy;
+            }
         }
     }
 
     function fillHistory(vpos) {
-        while(history.length <= historyMax) {
+        while (history.length <= historyMax) {
             history.push(vpos);
         }
         history.shift();
     }
 
-    var that = {},
-        vpos = JsCave.height / 3,
-        history = [],
-        historyMax = 6,
-        size = 5,
-        hpos = size * historyMax,
-        dy = 1,
-        ddy = 1.3,
-        pressed = false;
-
     $(document).keydown(function (event) {
-        if (event.keyCode == 32) {
+        if (event.keyCode === 32) {
             pressed = true;
         }
     });
 
     $(document).keyup(function (event) {
-        if (event.keyCode == 32) {
+        if (event.keyCode === 32) {
             pressed = false;
         }
     });
 
     that.draw = function () {
         calculateDirection();
-        if (pressed) {
-            vpos += dy;
-        }
-        else {
-            vpos += dy;
-        }
+        vpos += dy;
         fillHistory(vpos);
-        for(var i = 0; i < history.length; i+=1) {
+        for (var i = 0; i < history.length; i += 1) {
             JsCave.ctx.fillRect(i * size, history[i], size, size);
         }
     };
@@ -346,8 +351,17 @@ JsCave.SnakeMaker = function () {
 
 
 JsCave.BarriersMaker = function () {
+    var that = {},
+        distance = 10,
+        count = 0,
+        width = 5,
+        height = 20,
+        goes = 0,
+        gracePeriod = 2; //this many barriers are skipped at beginning
+    that.height = height;
+
     function calculate(topMax, bottomMax) {
-        while(true) {
+        while (true) {
             if (goes > 60) {
                 return false;
             }
@@ -360,15 +374,6 @@ JsCave.BarriersMaker = function () {
         }
     }
     
-    var that = {},
-        distance = 10,
-        count = 0,
-        width = 5,
-        height = 20,
-        goes = 0,
-        gracePeriod = 2; //this many barriers are skipped at beginning
-    that.height = height;
-
     that.getNew = function (topMax, bottomMax) {
         if (count >= distance) {
             count = 0;
@@ -391,16 +396,16 @@ JsCave.BarriersMaker = function () {
 
 
 JsCave.WallsMaker = function () {
-    function fillArray() {
-        offArray.shift();
-        while(offArray.length * hBlockSize < JsCave.width) {
-            var topOffset = nextOffset(),
-                bottomOffset = Math.floor(topOffset + tunnelHeight),
-                barrierTop = JsCave.Barriers.getNew(topOffset,
-                                                    bottomOffset);
-            offArray.push([topOffset, bottomOffset, barrierTop]);
-        }
-    }
+    var that = {},
+        tunnelHeight = JsCave.height * 3 / 4,
+        startingHeight = tunnelHeight,
+        offset = (JsCave.height - tunnelHeight) / 2,
+        offArray = [],
+        hBlockSize = 5,
+        vBlockSize = 2,
+        lastGoUp = 0,
+        directionBias = 0.9, //likelihood of tunnel direction continuing
+        narrowing = 0.1; //how much the tunnel narrows each frame
 
     function goUpOrDown() {
         var goUp;
@@ -436,27 +441,26 @@ JsCave.WallsMaker = function () {
         return offset;
     }
 
-    var that = {},
-        tunnelHeight = JsCave.height * 3 / 4,
-        startingHeight = tunnelHeight,
-        offset = (JsCave.height - tunnelHeight) / 2,
-        offArray = [],
-        counter = 0,
-        hBlockSize = 5,
-        vBlockSize = 2,
-        lastGoUp = 0,
-        directionBias = 0.9, //likelihood of tunnel direction continuing
-        narrowing = 0.1; //how much the tunnel narrows each frame
+    function fillArray() {
+        offArray.shift();
+        while (offArray.length * hBlockSize < JsCave.width) {
+            var topOffset = nextOffset(),
+                bottomOffset = Math.floor(topOffset + tunnelHeight),
+                barrierTop = JsCave.Barriers.getNew(topOffset,
+                                                    bottomOffset);
+            offArray.push([topOffset, bottomOffset, barrierTop]);
+        }
+    }
 
 
     that.draw = function () {
-        var width = JsCave.width,
-            height = JsCave.height;
+        var height = JsCave.height,
+            var i;
         fillArray();
         tunnelHeight -= narrowing;
         JsCave.ctx.save();
         JsCave.ctx.fillStyle = rgb(70, 60, 40);
-        for(var i = 0; i < offArray.length; i+=1) {
+        for (i = 0; i < offArray.length; i += 1) {
             var topEdge = 0,
                 topHeight = offArray[i][0],
                 bottomEdge = offArray[i][1],
@@ -488,6 +492,15 @@ JsCave.WallsMaker = function () {
 
 
 JsCave.TextMaker = function (ctx, colour, isScore) {
+    var that = {},
+        blockSize = 2,
+        font,
+        fontWidth = 3;
+    
+    if (colour === undefined) {
+        colour = "#222";
+    }
+    
     function loadFont() {
         if (font === undefined) {
             $.ajax({async: false,
@@ -507,8 +520,8 @@ JsCave.TextMaker = function (ctx, colour, isScore) {
     }
 
     function drawLetter(letter, xOffset, yOffset) {
-        for(var row = 0; row < letter.length; row+=1) {
-            for(var col = 0; col < letter[row].length; col += 1) {
+        for (var row = 0; row < letter.length; row+=1) {
+            for (var col = 0; col < letter[row].length; col += 1) {
                 if (letter[row][col]) {
                     drawSquare(col + xOffset, row + yOffset);
                 }
@@ -516,37 +529,30 @@ JsCave.TextMaker = function (ctx, colour, isScore) {
         }
     }
 
-    var that = {},
-        blockSize = 2,
-        font,
-        fontWidth = 3,
-        fontHeight = 5;
-    
-    if (colour === undefined) {
-        colour = "#222";
-    }
-    
     that.renderString = function (str, y, lineNumber) {
-        var x;
+        var x,
+            letterWidth,
+            canvasWidth,
+            textWidth;
         ctx.save();
         ctx.fillStyle = colour;
         loadFont();
         str = str.toUpperCase();
-        if(!isScore) {
-            var letterWidth = (fontWidth + 1);
-            var textWidth = str.length * letterWidth;
-            var canvasWidth = Math.round(JsCave.width / blockSize);
+        if (!isScore) {
+            letterWidth = (fontWidth + 1);
+            textWidth = str.length * letterWidth;
+            canvasWidth = Math.round(JsCave.width / blockSize);
             var yOffset = JsCave.height / 2;
             y += (yOffset - (blockSize * 32)) / blockSize;
             x = (canvasWidth - textWidth) / 2;
         }
         else {
-            var letterWidth = (fontWidth + 1);
-            var canvasWidth = Math.round(JsCave.scoreWidth / blockSize);
-            var textWidth = str.length * letterWidth;
+            letterWidth = (fontWidth + 1);
+            canvasWidth = Math.round(JsCave.scoreWidth / blockSize);
+            textWidth = str.length * letterWidth;
             x = (canvasWidth - textWidth) / 2;
         }
-        for(var i = 0; i < str.length; i+=1) {
+        for (var i = 0; i < str.length; i += 1) {
             var letter = font[str[i]];
             drawLetter(letter, i * 4 + x, lineNumber * 7 + y);
         }
