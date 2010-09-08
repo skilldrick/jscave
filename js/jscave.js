@@ -30,8 +30,11 @@ JsCave.init = function () {
     options.historyMax = 6;
     options.acceleration = 1.2;
     options.maxVelocity = 10;
-    
-    JsCave.setCanvas();
+    options.speed = 100;
+    options.canvasSize = [128, 128];
+
+    JsCave.loadOptionsFromQueryString(options);
+    JsCave.setCanvas(options);
     JsCave.gameOver = false;
     JsCave.restart = false;
     JsCave.Game = JsCave.GameMaker(options);
@@ -40,22 +43,23 @@ JsCave.init = function () {
     JsCave.Game.start();
 };
 
-JsCave.setCanvas = function () {
+JsCave.loadOptionsFromQueryString = function (options) {
     var queryString = window.location.search.substring(1),
-        canvasSize = [128, 128],
-        otherSizes = {
+        sizes = {
             "tall": [128, 512],
             "wide": [512, 128],
-            "big": [512, 512]
+            "big":  [512, 512]
         };
 
-    if (queryString in otherSizes) {
-        canvasSize = otherSizes[queryString];
+    if (queryString in sizes) {
+        options.canvasSize = sizes[queryString];
     }
+};
 
-    $('#game-board')[0].width = canvasSize[0];
-    $('#game-board')[0].height = canvasSize[1];
-    $('#score')[0].width = canvasSize[0];
+JsCave.setCanvas = function (options) {
+    $('#game-board')[0].width = options.canvasSize[0];
+    $('#game-board')[0].height = options.canvasSize[1];
+    $('#score')[0].width = options.canvasSize[0];
 };
 
 
@@ -63,8 +67,7 @@ JsCave.GameMaker = function (options) {
     var that = {},
         ctx,
         width,
-        height,
-        speed = 100;
+        height;
     
     function gameOver() {
         JsCave.gameOver = true;
@@ -119,17 +122,13 @@ JsCave.GameMaker = function (options) {
         that.ctx.stroke();
         that.ctx.restore();
         if (count < 5) {
-            setTimeout(drawCollision, 100, count + 1, callback);
+            setTimeout(drawCollision, options.speed, count + 1, callback);
         }
         else {
             if (callback !== undefined) {
                 callback();
             }
         }
-    }
-
-    function drawBorder() {
-        ctx.strokeRect(0.5, 0.5, width - 1, height - 1);
     }
 
     function drawBackground() {
@@ -147,7 +146,6 @@ JsCave.GameMaker = function (options) {
         JsCave.Walls.draw();
         JsCave.Snake.draw();
         JsCave.Score.draw();
-        drawBorder();
     }
 
     function gameLoop() {
@@ -163,7 +161,7 @@ JsCave.GameMaker = function (options) {
             JsCave.init();
         }
         else {
-            setTimeout(gameLoop, speed);
+            setTimeout(gameLoop, options.speed);
         }
     }
 
